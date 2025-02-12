@@ -34,13 +34,13 @@ def comment(news_post, authenticated_client):
 def test_anonymous_user_cannot_post_comment(anonymous_client, news_post):
     url = reverse('news:comment', kwargs={'pk': news_post.pk})
     response = anonymous_client.post(url, {'text': 'Test comment'})
-    assert response.status_code == 302  # Redirect to login page
+    assert response.status_code == 302
 
 
 def test_authenticated_user_can_post_comment(authenticated_client, news_post):
     url = reverse('news:comment', kwargs={'pk': news_post.pk})
     response = authenticated_client.post(url, {'text': 'Test comment'})
-    assert response.status_code == 302  # Redirect to news detail page
+    assert response.status_code == 302
     assert Comment.objects.filter(text='Test comment').exists()
 
 
@@ -50,7 +50,7 @@ def test_comment_with_banned_words(authenticated_client, news_post):
     comment_text = f'Test {banned_words[0]} comment'
     payload = {'text': comment_text}
     response = authenticated_client.post(url, payload)
-    assert response.status_code == 200  # Form returns error
+    assert response.status_code == 200
     comment_text = f'Test {banned_words[0]} comment'
     comment_query = Comment.objects.filter(text=comment_text)
     comment_exists = comment_query.exists()
@@ -62,7 +62,7 @@ def test_authenticated_user_can_edit_own_comment(authenticated_client,
     url = reverse('news:edit', kwargs={'pk': comment.pk})
     new_text = 'Updated test comment'
     response = authenticated_client.post(url, {'text': new_text})
-    assert response.status_code == 302  # Redirect to news detail page
+    assert response.status_code == 302
     comment.refresh_from_db()
     assert comment.text == new_text
 
@@ -71,7 +71,7 @@ def test_authenticated_user_can_delete_own_comment(authenticated_client,
                                                    comment):
     url = reverse('news:delete', kwargs={'pk': comment.pk})
     response = authenticated_client.post(url)
-    assert response.status_code == 302  # Redirect to news detail page
+    assert response.status_code == 302
     assert not Comment.objects.filter(pk=comment.pk).exists()
 
 

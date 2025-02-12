@@ -58,13 +58,13 @@ def test_comment_edit_page_authenticated(authenticated_client, comment):
 def test_comment_delete_page_anonymous(anonymous_client, comment):
     url = reverse('news:delete', kwargs={'pk': comment.pk})
     response = anonymous_client.get(url)
-    assert response.status_code == 302  # Redirect to login page
+    assert response.status_code == 302
 
 
 def test_comment_edit_page_anonymous(anonymous_client, comment):
     url = reverse('news:edit', kwargs={'pk': comment.pk})
     response = anonymous_client.get(url)
-    assert response.status_code == 302  # Redirect to login page
+    assert response.status_code == 302
 
 
 def test_comment_delete_page_wrong_user(authenticated_client, comment):
