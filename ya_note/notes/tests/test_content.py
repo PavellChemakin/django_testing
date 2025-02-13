@@ -3,7 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from ya_note.notes.models import Note
+from notes.models import Note
 
 
 class YaNoteContentTests(TestCase):
@@ -12,11 +12,10 @@ class YaNoteContentTests(TestCase):
                                               password='testpass123')
         self.user2 = User.objects.create_user(username='user2',
                                               password='testpass123')
-
-        self.note1 = Note.objects.create(title='Note 1', content='Content 1',
-                                         user=self.user1)
-        self.note2 = Note.objects.create(title='Note 2', content='Content 2',
-                                         user=self.user2)
+        self.note1 = Note.objects.create(title='Note 1', text='Content 1',
+                                         author=self.user1)
+        self.note2 = Note.objects.create(title='Note 2', text='Content 2',
+                                         author=self.user2)
 
         self.client = Client()
         self.client.login(username='user1', password='testpass123')
@@ -35,11 +34,11 @@ class YaNoteContentTests(TestCase):
         self.assertFalse(self.note2 in response.context['object_list'])
 
     def test_forms_on_create_and_update_pages(self):
-        response = self.client.get(reverse('notes:create'))
+        response = self.client.get(reverse('notes:add'))
         self.assertEqual(response.status_code, 200)
         self.assertTrue('form' in response.context)
 
-        response = self.client.get(reverse('notes:update',
+        response = self.client.get(reverse('notes:edit',
                                            args=[self.note1.slug]))
         self.assertEqual(response.status_code, 200)
         self.assertTrue('form' in response.context)

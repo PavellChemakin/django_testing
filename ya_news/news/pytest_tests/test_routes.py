@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.test import Client
 
-from ya_news.news.models import News, Comment
+from news.models import News, Comment
 
 
 @pytest.fixture
@@ -31,42 +31,49 @@ def comment(news_post, authenticated_client):
                                   author_id=user, text='Test comment')
 
 
+@pytest.mark.django_db
 def test_home_page_anonymous(anonymous_client):
     url = reverse('news:home')
     response = anonymous_client.get(url)
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 def test_news_detail_page_anonymous(anonymous_client, news_post):
     url = reverse('news:detail', kwargs={'pk': news_post.pk})
     response = anonymous_client.get(url)
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 def test_comment_delete_page_authenticated(authenticated_client, comment):
     url = reverse('news:delete', kwargs={'pk': comment.pk})
     response = authenticated_client.get(url)
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 def test_comment_edit_page_authenticated(authenticated_client, comment):
     url = reverse('news:edit', kwargs={'pk': comment.pk})
     response = authenticated_client.get(url)
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 def test_comment_delete_page_anonymous(anonymous_client, comment):
     url = reverse('news:delete', kwargs={'pk': comment.pk})
     response = anonymous_client.get(url)
     assert response.status_code == 302
 
 
+@pytest.mark.django_db
 def test_comment_edit_page_anonymous(anonymous_client, comment):
     url = reverse('news:edit', kwargs={'pk': comment.pk})
     response = anonymous_client.get(url)
     assert response.status_code == 302
 
 
+@pytest.mark.django_db
 def test_comment_delete_page_wrong_user(authenticated_client, comment):
     other_user = User.objects.create_user(username='otheruser',
                                           password='otherpass')
@@ -76,6 +83,7 @@ def test_comment_delete_page_wrong_user(authenticated_client, comment):
     assert response.status_code == 404
 
 
+@pytest.mark.django_db
 def test_comment_edit_page_wrong_user(authenticated_client, comment):
     other_user = User.objects.create_user(username='otheruser',
                                           password='otherpass')
@@ -85,19 +93,22 @@ def test_comment_edit_page_wrong_user(authenticated_client, comment):
     assert response.status_code == 404
 
 
+@pytest.mark.django_db
 def test_registration_page_anonymous(anonymous_client):
-    url = reverse('registration_register')
+    url = reverse('users:signup')
     response = anonymous_client.get(url)
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 def test_login_page_anonymous(anonymous_client):
-    url = reverse('login')
+    url = reverse('users:login')
     response = anonymous_client.get(url)
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 def test_logout_page_anonymous(anonymous_client):
-    url = reverse('logout')
+    url = reverse('users:logout')
     response = anonymous_client.get(url)
     assert response.status_code == 200

@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from ya_note.notes.models import Note
+from notes.models import Note
 
 
 class RouteTests(TestCase):
@@ -18,7 +18,7 @@ class RouteTests(TestCase):
 
     def test_home_page_anonymous(self):
         self.client.logout()
-        response = self.client.get(reverse('home'))
+        response = self.client.get(reverse('notes:home'))
         self.assertEqual(response.status_code, 200)
 
     def test_authenticated_user_pages(self):
@@ -28,7 +28,7 @@ class RouteTests(TestCase):
         response = self.client.get(reverse('notes:success'))
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse('notes:create'))
+        response = self.client.get(reverse('notes:add'))
         self.assertEqual(response.status_code, 200)
 
     def test_note_detail_update_delete_pages(self):
@@ -40,7 +40,7 @@ class RouteTests(TestCase):
         response = self.client.get(reverse('notes:detail', args=[note.slug]))
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse('notes:update', args=[note.slug]))
+        response = self.client.get(reverse('notes:edit', args=[note.slug]))
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(reverse('notes:delete', args=[note.slug]))
@@ -55,7 +55,7 @@ class RouteTests(TestCase):
         response = self.client.get(reverse('notes:detail', args=[note.slug]))
         self.assertEqual(response.status_code, 404)
 
-        response = self.client.get(reverse('notes:update', args=[note.slug]))
+        response = self.client.get(reverse('notes:edit', args=[note.slug]))
         self.assertEqual(response.status_code, 404)
 
         response = self.client.get(reverse('notes:delete', args=[note.slug]))
@@ -66,16 +66,17 @@ class RouteTests(TestCase):
         response = self.client.get(reverse('notes:list'))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(
-            response, f"{reverse('login')}?next={reverse('notes:list')}")
+            response, f"/auth/login/?next={reverse('notes:list')}")
 
         response = self.client.get(reverse('notes:success'))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(
-            response, f"{reverse('login')}?next={reverse('notes:success')}")
-        response = self.client.get(reverse('notes:create'))
+            response, f"/auth/login/?next={reverse('notes:success')}")
+
+        response = self.client.get(reverse('notes:add'))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(
-            response, f"{reverse('login')}?next={reverse('notes:create')}")
+            response, f"/auth/login/?next={reverse('notes:add')}")
 
         note = Note.objects.create(
             title='Test Note',
@@ -84,43 +85,43 @@ class RouteTests(TestCase):
         )
         response = self.client.get(reverse('notes:detail', args=[note.slug]))
         self.assertEqual(response.status_code, 302)
-        login_url = reverse('login')
+        login_url = "/auth/login/"
         detail_url = reverse('notes:detail', args=[note.slug])
         self.assertRedirects(response, f"{login_url}?next={detail_url}")
 
-        response = self.client.get(reverse('notes:update', args=[note.slug]))
+        response = self.client.get(reverse('notes:edit', args=[note.slug]))
         self.assertEqual(response.status_code, 302)
-        login_url = reverse('login')
-        update_url = reverse('notes:update', args=note.slug)
+        login_url = "/auth/login/"
+        update_url = reverse('notes:edit', args=[note.slug])
         self.assertRedirects(response, f"{login_url}?next={update_url}")
 
         response = self.client.get(reverse('notes:delete', args=[note.slug]))
         self.assertEqual(response.status_code, 302)
-        login_url = reverse('login')
-        delete_url = reverse('notes:delete', args=note.slug)
+        login_url = "/auth/login/"
+        delete_url = reverse('notes:delete', args=[note.slug])
         self.assertRedirects(response, f"{login_url}?next={delete_url}")
 
     def test_public_pages_available_to_all(self):
         self.client.logout()
 
-        response = self.client.get(reverse('register'))
+        response = self.client.get("/auth/signup/")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse('login'))
+        response = self.client.get("/auth/login/")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse('logout'))
+        response = self.client.get("/auth/logout/")
         self.assertEqual(response.status_code, 200)
 
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse('register'))
+        response = self.client.get("/auth/signup/")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse('login'))
+        response = self.client.get("/auth/login/")
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse('logout'))
+        response = self.client.get("/auth/logout/")
         self.assertEqual(response.status_code, 200)
 
 

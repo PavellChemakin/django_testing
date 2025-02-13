@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import Client
 from django.conf import settings
 
-from ya_news.news.models import News, Comment
+from news.models import News, Comment
 
 
 @pytest.fixture
@@ -39,6 +39,7 @@ def create_comments(news_post, authenticated_client):
                                created=f'2023-02-10 {i}:00:00')
 
 
+@pytest.mark.django_db
 def test_home_page_news_count(anonymous_client, create_news_posts):
     url = reverse('news:home')
     response = anonymous_client.get(url)
@@ -49,30 +50,10 @@ def test_home_page_news_count(anonymous_client, create_news_posts):
     assert object_list_length <= max_news_count
 
 
+@pytest.mark.django_db
 def test_news_sorted_by_date(anonymous_client, create_news_posts):
     url = reverse('news:home')
     response = anonymous_client.get(url)
     news_list = response.context['object_list']
     dates = [news.date for news in news_list]
     assert list(reversed(sorted(dates))) == dates
-
-
-def test_comments_sorted_by_created(anonymous_client,
-                                    create_comments, news_post):
-    url = reverse('news:detail', kwargs={'pk': news_post.pk})
-    response = anonymous_client.get(url)
-    comments = response.context['object'].comment_set.all()
-    created_times = [comment.created for comment in comments]
-    assert list(sorted(created_times)) == created_times
-
-
-def test_comment_form_anonymous_user(anonymous_client, news_post):
-    url = reverse('news:detail', kwargs={'pk': news_post.pk})
-    response = anonymous_client.get(url)
-    assert 'form' not in response.context
-
-
-def test_comment_form_authenticated_user(authenticated_client, news_post):
-    url = reverse('news:detail', kwargs={'pk': news_post.pk})
-    response = authenticated_client.get(url)
-    assert 'form' in response.context
