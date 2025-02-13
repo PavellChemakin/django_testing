@@ -82,7 +82,8 @@ def test_authenticated_user_can_delete_own_comment(authenticated_client,
 @pytest.mark.django_db
 def test_authenticated_user_cannot_edit_others_comment(authenticated_client,
                                                        comment):
-    other_user = User.objects.create_user(username='otheruser', password='otherpass')
+    other_user = User.objects.create_user(username='otheruser',
+                                          password='otherpass')
     authenticated_client.force_login(other_user)
     url = reverse('news:edit', kwargs={'pk': comment.pk})
     response = authenticated_client.post(url, {'text': 'Trying to edit'})
@@ -92,7 +93,8 @@ def test_authenticated_user_cannot_edit_others_comment(authenticated_client,
 @pytest.mark.django_db
 def test_authenticated_user_cannot_delete_others_comment(authenticated_client,
                                                          comment):
-    other_user = User.objects.create_user(username='otheruser', password='otherpass')
+    other_user = User.objects.create_user(username='otheruser',
+                                          password='otherpass')
     authenticated_client.force_login(other_user)
     url = reverse('news:delete', kwargs={'pk': comment.pk})
     response = authenticated_client.post(url)
