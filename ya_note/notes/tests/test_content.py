@@ -1,48 +1,56 @@
 import unittest
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
+from http import HTTPStatus
 
 from notes.models import Note
 
 
 class YaNoteContentTests(TestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(username='user1',
-                                              password='testpass123')
-        self.user2 = User.objects.create_user(username='user2',
-                                              password='testpass123')
-        self.note1 = Note.objects.create(title='Note 1', text='Content 1',
-                                         author=self.user1)
-        self.note2 = Note.objects.create(title='Note 2', text='Content 2',
-                                         author=self.user2)
+        self.user_one = User.objects.create_user(username='user1',
+                                                 password='testpass123')
+        self.user_two = User.objects.create_user(username='user2',
+                                                 password='testpass123')
 
-        self.client = Client()
+        self.note_by_user_one = Note.objects.create(title='Note 1',
+                                                    text='Content 1',
+                                                    author=self.user_one)
+        self.note_by_user_two = Note.objects.create(title='Note 2',
+                                                    text='Content 2',
+                                                    author=self.user_two)
+
         self.client.login(username='user1', password='testpass123')
 
+        self.list_url = reverse('notes:list')
+        self.add_url = reverse('notes:add')
+        self.edit_url = reverse('notes:edit',
+                                args=[self.note_by_user_one.slug])
+
     def test_note_in_object_list(self):
-        response = self.client.get(reverse('notes:list'))
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue('object_list' in response.context)
-        self.assertTrue(self.note1 in response.context['object_list'])
-        self.assertFalse(self.note2 in response.context['object_list'])
+        object_list = response.context['object_list']
+        self.assertTrue(self.note_by_user_one in object_list)
+        object_list = response.context['object_list']
+        self.assertFalse(self.note_by_user_two in object_list)
 
     def test_user_sees_only_own_notes(self):
-        response = self.client.get(reverse('notes:list'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(self.note1 in response.context['object_list'])
-        self.assertFalse(self.note2 in response.context['object_list'])
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        object_list = response.context['object_list']
+        self.assertTrue(self.note_by_user_one in object_list)
+        object_list = response.context['object_list']
+        self.assertFalse(self.note_by_user_two in object_list)
 
-    def test_forms_on_create_and_update_pages(self):
-        response = self.client.get(reverse('notes:add'))
-        self.assertEqual(response.status_code, 200)
+    def test_form_on_create_page(self):
+        response = self.client.get(self.add_url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue('form' in response.context)
 
-        response = self.client.get(reverse('notes:edit',
-                                           args=[self.note1.slug]))
-        self.assertEqual(response.status_code, 200)
+    def test_form_on_update_page(self):
+        response = self.client.get(self.edit_url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue('form' in response.context)
-
-
-if __name__ == '__main__':
-    unittest.main()
