@@ -1,7 +1,9 @@
-from django.test import TestCase
+import unittest
+from http import HTTPStatus
+
 from django.urls import reverse
 from django.contrib.auth.models import User
-from http import HTTPStatus
+from django.test import TestCase
 
 from notes.models import Note
 
