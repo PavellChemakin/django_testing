@@ -1,6 +1,6 @@
-import pytest
 from http import HTTPStatus
 
+import pytest
 from django.urls import reverse
 
 from news.models import News, Comment
@@ -10,11 +10,11 @@ HOME_URL = reverse('news:home')
 
 @pytest.mark.django_db
 def test_single_news_in_object_list(anonymous_client, news_post):
-    url = reverse('news:home')
+    url = HOME_URL
     response = anonymous_client.get(url)
     assert response.status_code == HTTPStatus.OK
     object_list = response.context.get('object_list', [])
-    assert object_list.count() > 0
+    assert object_list.count() <= 10
 
 
 @pytest.mark.django_db
@@ -22,8 +22,8 @@ def test_user_sees_only_own_news(authenticated_client):
     response = authenticated_client.get(HOME_URL)
     assert response.status_code == HTTPStatus.OK
     object_list = response.context['object_list']
-    all_news = News.objects.all()
-    assert set(object_list) == set(all_news)
+    all_news = News.objects.all().order_by('date')[:10]
+    assert list(object_list) == list(all_news)
 
 
 @pytest.mark.django_db

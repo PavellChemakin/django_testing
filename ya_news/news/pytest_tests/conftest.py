@@ -12,16 +12,15 @@ def anonymous_client():
 
 
 @pytest.fixture
-def get_user(user_id):
-    return User.objects.get(pk=user_id)
+def get_user():
+    user = User.objects.create_user(username='testuser', password='testpass')
+    return user
 
 
 @pytest.fixture
-def authenticated_client(db):
-    user = User.objects.create_user(username='testuser', password='testpass')
+def authenticated_client(db, get_user):
     client = Client()
-    client.force_login(user)
-    client.user = user
+    client.force_login(get_user)
     return client
 
 
@@ -31,13 +30,8 @@ def news_post():
 
 
 @pytest.fixture
-def user_id(authenticated_client):
-    return authenticated_client.session.get('_auth_user_id')
-
-
-@pytest.fixture
-def create_comments(news_post, authenticated_client):
-    user = authenticated_client.user
+def create_comments(news_post, get_user):
+    user = get_user
     comment = Comment.objects.create(
         news=news_post,
         author=user,
@@ -48,8 +42,8 @@ def create_comments(news_post, authenticated_client):
 
 
 @pytest.fixture
-def create_multiple_comments(news_post, authenticated_client):
-    user = authenticated_client.user
+def create_multiple_comments(news_post, get_user):
+    user = get_user
     comments = []
 
     for i in range(3):

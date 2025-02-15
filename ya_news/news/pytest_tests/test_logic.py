@@ -1,6 +1,6 @@
-import pytest
 from http import HTTPStatus
 
+import pytest
 from django.urls import reverse
 from django.contrib.auth.models import User
 
@@ -8,28 +8,28 @@ from news.models import Comment
 
 
 @pytest.mark.django_db
-def test_anonymous_user_cannot_post_comment(anonymous_client,
-                                            news_post):
+def test_anonymous_user_cannot_post_comment(anonymous_client, news_post):
+    comment_text = 'Test comment'
     url = reverse('news:detail', kwargs={'pk': news_post.pk})
-    response = anonymous_client.post(url, {'text': 'Test comment'})
+    response = anonymous_client.post(url, {'text': comment_text})
     assert response.status_code == HTTPStatus.FOUND
-    assert not Comment.objects.filter(text='Test comment').exists()
+    assert not Comment.objects.filter(text=comment_text).exists()
 
 
 @pytest.mark.django_db
-def test_authenticated_user_can_post_comment(authenticated_client,
-                                             news_post):
+def test_authenticated_user_can_post_comment(authenticated_client, news_post):
+    comment_text = 'Test comment'
     url = reverse('news:detail', kwargs={'pk': news_post.pk})
-    response = authenticated_client.post(url, {'text': 'Test comment'})
+    response = authenticated_client.post(url, {'text': comment_text})
     assert response.status_code == HTTPStatus.FOUND
-    assert Comment.objects.filter(text='Test comment').exists()
+    assert Comment.objects.filter(text=comment_text).exists()
 
 
 @pytest.mark.django_db
 def test_comment_with_banned_words(authenticated_client, news_post):
     banned_words = ['forbidden', 'banned']
-    url = reverse('news:detail', kwargs={'pk': news_post.pk})
     comment_text = f'Test {banned_words[0]} comment'
+    url = reverse('news:detail', kwargs={'pk': news_post.pk})
     payload = {'text': comment_text}
     response = authenticated_client.post(url, payload)
     assert response.status_code == HTTPStatus.FOUND
@@ -41,8 +41,8 @@ def test_comment_with_banned_words(authenticated_client, news_post):
 @pytest.mark.django_db
 def test_authenticated_user_can_edit_own_comment(authenticated_client,
                                                  create_comments):
-    url = reverse('news:edit', kwargs={'pk': create_comments.pk})
     new_text = 'Updated test comment'
+    url = reverse('news:edit', kwargs={'pk': create_comments.pk})
     response = authenticated_client.post(url, {'text': new_text})
     assert response.status_code == HTTPStatus.FOUND
     create_comments.refresh_from_db()

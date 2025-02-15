@@ -10,35 +10,46 @@ from notes.models import Note
 
 class YaNoteLogicTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpass123')
-        self.client.login(username='testuser', password='testpass123')
+        self.username = 'testuser'
+        self.password = 'testpass123'
+        self.user = User.objects.create_user(username=self.username,
+                                             password=self.password)
+        self.client.login(username=self.username, password=self.password)
         self.add_url = reverse('notes:add')
-        self.other_user = User.objects.create_user(username='otheruser',
-                                                   password='otherpass123')
-        self.note = Note.objects.create(title='Note for Editing',
-                                        text='Content for Editing',
-                                        author=self.user)
+
+        self.other_username = 'otheruser'
+        self.other_password = 'otherpass123'
+        self.other_user = User.objects.create_user(
+            username=self.other_username, password=self.other_password)
+
+        self.note_title = 'Note for Editing'
+        self.note_text = 'Content for Editing'
+        self.note = Note.objects.create(title=self.note_title,
+                                        text=self.note_text, author=self.user)
+
+        self.other_note_title = 'Note for Editing by Other'
+        self.other_note_text = 'Content for Editing by Other'
         self.other_note = Note.objects.create(
-            title='Note for Editing by Other',
-            text='Content for Editing by Other',
-            author=self.other_user
-        )
+            title=self.other_note_title,
+            text=self.other_note_text,
+            author=self.other_user)
 
     def test_logged_in_user_can_create_note(self):
         note_count = Note.objects.count()
+        new_note_title = 'Test Note'
+        new_note_text = 'Test Content'
         response = self.client.post(
             self.add_url,
             {
-                'title': 'Test Note',
-                'text': 'Test Content'
+                'title': new_note_title,
+                'text': new_note_text
             }
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertEqual(Note.objects.count(), note_count + 1)
         last_note = Note.objects.last()
-        self.assertEqual(last_note.title, 'Test Note')
-        self.assertEqual(last_note.text, 'Test Content')
+        self.assertEqual(last_note.title, new_note_title)
+        self.assertEqual(last_note.text, new_note_text)
         self.assertEqual(last_note.author, self.user)
 
     def test_anonymous_user_cannot_create_note(self):
@@ -49,11 +60,12 @@ class YaNoteLogicTests(TestCase):
         self.client.logout()
         response = self.client.post(self.add_url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertFalse(Note.objects.filter(title='Test Note').exists())
         self.assertRedirects(response, f"/auth/login/?next={self.add_url}")
+        self.assertFalse(Note.objects.filter(title='Test Note').exists())
+        self.assertFalse(Note.objects.filter(text='Test Content').exists())
 
     def test_unique_slug(self):
-        unique_slug = 'unique-slug'
+        unique_slug = slugify('unique-slug')
         Note.objects.create(
             title='Note 1',
             text='Content 1',

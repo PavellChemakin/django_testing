@@ -1,6 +1,6 @@
-import pytest
 from http import HTTPStatus
 
+import pytest
 from django.urls import reverse
 from django.contrib.auth.models import User
 
