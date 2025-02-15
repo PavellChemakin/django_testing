@@ -57,3 +57,16 @@ def create_multiple_comments(news_post, get_user):
         comments.append(comment)
 
     return comments
+
+
+@pytest.fixture
+def create_multiple_news(get_user):
+    user = get_user
+    news_list = []
+    for i in range(5):  # Создаем 5 новостей
+        news = News.objects.create(
+            title=f'Test News {i+1}',
+            text=f'Test text {i+1}'
+        )
+        news_list.append(news)
+    return news_list, user

@@ -3,7 +3,7 @@ from http import HTTPStatus
 import pytest
 from django.urls import reverse
 
-from news.models import News, Comment
+from news.models import Comment, News
 
 HOME_URL = reverse('news:home')
 
@@ -18,12 +18,12 @@ def test_single_news_in_object_list(anonymous_client, news_post):
 
 
 @pytest.mark.django_db
-def test_user_sees_only_own_news(authenticated_client):
+def test_user_sees_only_own_news(authenticated_client, create_multiple_news):
     response = authenticated_client.get(HOME_URL)
     assert response.status_code == HTTPStatus.OK
     object_list = response.context['object_list']
-    all_news = News.objects.all().order_by('date')[:10]
-    assert list(object_list) == list(all_news)
+    news_list, _ = create_multiple_news
+    assert set(news_list) == set(object_list)
 
 
 @pytest.mark.django_db
@@ -55,6 +55,17 @@ def test_comments_sorted_chronologically(authenticated_client,
     )
     comments = list(response.context['news'].comment_set.all())
     assert comments == expected_comments
+
+
+@pytest.mark.django_db
+def test_news_sorted_chronologically(authenticated_client,
+                                     create_multiple_news):
+    response = authenticated_client.get(HOME_URL)
+    assert response.status_code == HTTPStatus.OK
+    object_list = response.context['object_list']
+    news_list, _ = create_multiple_news
+    expected_news = list(News.objects.all().order_by('-date'))
+    assert list(object_list) == expected_news
 
 
 @pytest.mark.django_db
