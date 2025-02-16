@@ -62,8 +62,7 @@ class YaNoteLogicTests(TestCase):
         self.client.logout()
         response = self.client.post(self.add_url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        login_url = reverse('login')
-        self.assertRedirects(response, f"{login_url}?next={self.add_url}")
+        self.assertRedirects(response, f"/auth/login/?next={self.add_url}")
         self.assertFalse(Note.objects.filter(title=title).exists())
         self.assertFalse(Note.objects.filter(text=text).exists())
 
