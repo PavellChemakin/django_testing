@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 
 from news.models import Comment, News
+from yanews.settings import NEWS_COUNT_ON_HOME_PAGE
 
 HOME_URL = reverse('news:home')
 
@@ -14,7 +15,7 @@ def test_single_news_in_object_list(anonymous_client, news_post):
     response = anonymous_client.get(url)
     assert response.status_code == HTTPStatus.OK
     object_list = response.context.get('object_list', [])
-    assert object_list.count() <= 10
+    assert object_list.count() <= NEWS_COUNT_ON_HOME_PAGE
 
 
 @pytest.mark.django_db

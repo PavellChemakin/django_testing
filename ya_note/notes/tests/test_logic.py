@@ -53,29 +53,37 @@ class YaNoteLogicTests(TestCase):
         self.assertEqual(last_note.author, self.user)
 
     def test_anonymous_user_cannot_create_note(self):
+        title = 'Test Note'
+        text = 'Test Content'
         data = {
-            'title': 'Test Note',
-            'text': 'Test Content'
+            'title': title,
+            'text': text
         }
         self.client.logout()
         response = self.client.post(self.add_url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertRedirects(response, f"/auth/login/?next={self.add_url}")
-        self.assertFalse(Note.objects.filter(title='Test Note').exists())
-        self.assertFalse(Note.objects.filter(text='Test Content').exists())
+        login_url = reverse('login')
+        self.assertRedirects(response, f"{login_url}?next={self.add_url}")
+        self.assertFalse(Note.objects.filter(title=title).exists())
+        self.assertFalse(Note.objects.filter(text=text).exists())
 
     def test_unique_slug(self):
-        unique_slug = slugify('unique-slug')
+        unique_slug_base = 'unique-slug'
+        unique_slug = slugify(unique_slug_base)
+        title1 = 'Note 1'
+        text1 = 'Content 1'
+        title2 = 'Note 2'
+        text2 = 'Content 2'
         Note.objects.create(
-            title='Note 1',
-            text='Content 1',
+            title=title1,
+            text=text1,
             author=self.user,
             slug=unique_slug
         )
         with self.assertRaises(Exception):
             Note.objects.create(
-                title='Note 2',
-                text='Content 2',
+                title=title2,
+                text=text2,
                 author=self.user,
                 slug=unique_slug
             )
@@ -83,6 +91,8 @@ class YaNoteLogicTests(TestCase):
     def test_view_creates_unique_slug(self):
         unique_title = 'Note with Unique Slug'
         unique_content = 'Content for Unique Slug'
+        another_title = 'Another Note'
+        another_content = 'Content for Another Note'
         response = self.client.post(
             reverse('notes:add'),
             {
@@ -100,27 +110,29 @@ class YaNoteLogicTests(TestCase):
         response = self.client.post(
             reverse('notes:add'),
             {
-                'title': 'Another Note',
-                'text': 'Content for Another Note',
+                'title': another_title,
+                'text': another_content,
                 'slug': note.slug
             }
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIn('slug', response.context['form'].errors)
-        self.assertFalse(Note.objects.filter(title='Another Note').exists())
+        self.assertFalse(Note.objects.filter(title=another_title).exists())
         queryset = Note.objects.filter(slug=note.slug)
         queryset = queryset.exclude(pk=note.pk)
         self.assertFalse(queryset.exists())
 
     def test_automatic_slug_generation(self):
+        test_title = 'Test Note without Slug'
+        test_content = 'Test Content'
         url = reverse('notes:add')
         data = {
-            'title': 'Test Note without Slug',
-            'text': 'Test Content'
+            'title': test_title,
+            'text': test_content
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        note = Note.objects.filter(title='Test Note without Slug').last()
+        note = Note.objects.filter(title=test_title).last()
         self.assertEqual(note.slug, slugify(note.title))
 
     def test_user_can_edit_own_note(self):
